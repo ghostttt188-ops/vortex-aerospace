@@ -1,0 +1,2790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortex Ghost Aerospace Exploration &amp; Research</title>
+  <style>
+    :root {
+      --bg: #080a0e;
+      --panel: #0f131a;
+      --panel-2: #151b24;
+      --border: #252e3d;
+      --text: #eef2f7;
+      --muted: #93a0b4;
+      --accent: #e6edf5;
+      --ok: #38b27b;
+      --warn: #d69e2e;
+      --done: #63b3ed;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+
+    .mono { font-family: var(--mono); }
+
+    /* Subtle Starfield Backdrop & Crisp Card Glow */
+    .starfield-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(1.5px 1.5px at 8% 14%, rgba(255,255,255,0.65), transparent),
+        radial-gradient(1px 1px at 22% 38%, rgba(168,213,255,0.55), transparent),
+        radial-gradient(2px 2px at 35% 12%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1px 1px at 49% 64%, rgba(255,255,255,0.45), transparent),
+        radial-gradient(1.5px 1.5px at 67% 24%, rgba(125,211,252,0.65), transparent),
+        radial-gradient(1px 1px at 78% 52%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(2px 2px at 91% 19%, rgba(255,255,255,0.65), transparent),
+        radial-gradient(1px 1px at 14% 78%, rgba(255,255,255,0.45), transparent),
+        radial-gradient(1.5px 1.5px at 56% 88%, rgba(168,213,255,0.55), transparent),
+        radial-gradient(1px 1px at 86% 82%, rgba(255,255,255,0.5), transparent);
+      background-size: 420px 420px;
+    }
+
+    body > *:not(.starfield-bg) {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card, .orbit-box, .planet-inspector, .calc-panel, .cert-panel, .tracker-panel, .apod-box {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+
+    .telemetry-bar {
+      background: #050709;
+      border-bottom: 1px solid var(--border);
+      padding: 0.55rem 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .telemetry-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.1rem;
+      align-items: center;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ok);
+      margin-right: 0.35rem;
+    }
+
+    .val-bright { color: var(--accent); font-weight: 600; }
+
+    .div-banner {
+      padding: 0.65rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.65rem;
+      background: rgba(99, 179, 237, 0.1);
+      color: #d7ecff;
+    }
+
+    .div-banner.lvl-LIVE { background: rgba(56, 178, 123, 0.14); color: #c5f7df; }
+    .div-banner.lvl-ALERT { background: rgba(214, 158, 46, 0.16); color: #fbe5b2; }
+
+    header.hero {
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #0d1117 0%, #080a0e 100%);
+      padding: 1.6rem 0 1.4rem;
+    }
+
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+
+    .hero-top-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+    }
+
+    /* Prominent Top-Right Kids Edition Toggle Switch */
+    .kids-switch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      background: #131c2b;
+      border: 2px solid #4ea8de;
+      border-radius: 999px;
+      padding: 0.45rem 0.9rem;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #eef6ff;
+      box-shadow: 0 0 14px rgba(78, 168, 222, 0.25);
+      transition: all 0.15s ease;
+    }
+
+    .kids-switch-pill.off {
+      background: var(--panel);
+      border-color: var(--border);
+      color: var(--muted);
+      box-shadow: none;
+    }
+
+    .switch-track {
+      width: 38px;
+      height: 20px;
+      background: #38b27b;
+      border-radius: 999px;
+      position: relative;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .kids-switch-pill.off .switch-track {
+      background: #2c3545;
+    }
+
+    .switch-thumb {
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 21px;
+      transition: left 0.15s ease;
+    }
+
+    .kids-switch-pill.off .switch-thumb {
+      left: 3px;
+    }
+
+    .hero-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 1.5rem;
+    }
+
+    .division-tag {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .hero-sub {
+      color: var(--muted);
+      max-width: 660px;
+      margin-top: 0.45rem;
+      font-size: 0.96rem;
+    }
+
+    .hero-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      font-family: var(--mono);
+    }
+
+    .metric-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 0.65rem 0.9rem;
+      border-radius: 6px;
+      min-width: 120px;
+    }
+
+    .metric-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; }
+    .metric-val { font-size: 1.02rem; font-weight: 700; margin-top: 0.15rem; }
+
+    .tab-nav-wrap {
+      background: #0b0e14;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .tab-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      padding: 0.65rem 1.25rem;
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+
+    .tab-btn {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: linear-gradient(145deg, rgba(14, 9, 24, 0.96), rgba(32, 14, 58, 0.88));
+      color: #e6dcff;
+      border: 1.5px solid #7c3aed;
+      border-radius: 7px;
+      padding: 0.55rem 0.88rem;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow:
+        0 0 10px rgba(124, 58, 237, 0.28),
+        inset 0 0 10px rgba(88, 28, 135, 0.35);
+      transition: all 0.16s ease;
+    }
+
+    .tab-btn:hover {
+      color: #ffffff;
+      border-color: #a855f7;
+      background: linear-gradient(145deg, rgba(24, 12, 42, 0.98), rgba(66, 22, 114, 0.92));
+      box-shadow:
+        0 0 15px rgba(168, 85, 247, 0.5),
+        inset 0 0 12px rgba(139, 92, 246, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+      color: #ffffff;
+      border-color: #c084fc;
+      background: linear-gradient(145deg, rgba(42, 16, 76, 0.98), rgba(88, 28, 135, 0.95));
+      box-shadow:
+        0 0 18px rgba(192, 132, 252, 0.55),
+        inset 0 0 14px rgba(168, 85, 247, 0.5);
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    main { padding: 2rem 0 3rem; }
+    section.module-section { margin-bottom: 2.75rem; }
+    section.module-section.hidden-tab { display: none; }
+
+    .sec-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.15rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sec-title {
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .sec-meta {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .planet-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.05fr) minmax(300px, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 820px) {
+      .planet-layout { grid-template-columns: 1fr; }
+    }
+
+    .orbit-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .orbit-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+    }
+
+    .scrubber-bar {
+      margin-top: 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+    }
+
+    input[type="range"] { width: 100%; margin-top: 0.4rem; cursor: pointer; }
+
+    .mini-btn {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.28rem 0.55rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .mini-btn.active, .mini-btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    canvas#orbit-canvas {
+      width: 100%;
+      max-width: 450px;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      display: block;
+      margin: 0 auto;
+      background: #05070a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .planet-inspector {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .planet-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+    .p-chip {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.28rem 0.55rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .p-chip.selected {
+      background: var(--panel-2);
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .p-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      font-family: var(--mono);
+    }
+
+    .p-stat {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+    }
+
+    .p-stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; }
+    .p-stat-val { font-size: 0.94rem; font-weight: 700; margin-top: 0.15rem; }
+
+    .kid-box {
+      background: rgba(99, 179, 237, 0.08);
+      border: 1px solid rgba(99, 179, 237, 0.35);
+      border-radius: 6px;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.86rem;
+      color: #dceeff;
+    }
+
+    .hidden-kid { display: none !important; }
+
+    .size-scale-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+    }
+
+    canvas#size-canvas {
+      width: 100%;
+      height: 76px;
+      display: block;
+      margin-top: 0.4rem;
+      background: #05070a;
+      border-radius: 4px;
+    }
+
+    .jpl-strip, .lunar-strip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .calc-panel {
+      margin-top: 1rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+    }
+
+    .calc-inputs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin: 0.65rem 0 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .calc-inputs input {
+      width: 110px;
+      padding: 0.42rem 0.55rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+    }
+
+    .calc-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+    }
+
+    .calc-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.7rem;
+    }
+
+    .planet-table-wrap {
+      margin-top: 1rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    table.planet-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    table.planet-table th, table.planet-table td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    table.planet-table th {
+      color: var(--muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      background: var(--panel-2);
+    }
+
+    .p-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 0.45rem;
+      vertical-align: middle;
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-row input {
+      flex: 1;
+      min-width: 220px;
+      padding: 0.6rem 0.75rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.86rem;
+    }
+
+    .apod-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      margin-bottom: 1.5rem;
+    }
+
+    .apod-media {
+      background: #050709;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .apod-media img {
+      width: 100%;
+      height: 100%;
+      max-height: 360px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .apod-body {
+      padding: 1.3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.55rem;
+    }
+
+    .apod-body h3 { font-size: 1.22rem; }
+    .apod-body p { font-size: 0.92rem; color: #d6dde8; }
+
+    .photo-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .photo-thumb {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #050709;
+      display: block;
+    }
+
+    .photo-content {
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+    }
+
+    .photo-content h3 { font-size: 1rem; }
+    .photo-content p { font-size: 0.85rem; color: var(--muted); }
+
+    .exo-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.05rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .exo-meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.45rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem;
+    }
+
+    .swx-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.55rem;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+    }
+
+    .quiz-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin-top: 0.45rem;
+      padding: 0.55rem 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    .quiz-option:hover { border-color: var(--accent); }
+    .quiz-option.correct { border-color: var(--ok); background: rgba(56, 178, 123, 0.15); }
+    .quiz-option.wrong { border-color: #e55353; background: rgba(229, 83, 83, 0.15); }
+
+    /* Printable Cadet Certificate */
+    .cert-panel {
+      margin-top: 1.25rem;
+      background: #0b111b;
+      border: 2px solid #4ea8de;
+      border-radius: 10px;
+      padding: 1.4rem;
+    }
+
+    .cert-sheet {
+      margin-top: 1rem;
+      background: #f8fafc;
+      color: #0f172a;
+      border: 6px double #1e3a8a;
+      border-radius: 8px;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+    }
+
+    .cert-org {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #1e3a8a;
+      font-weight: 700;
+    }
+
+    .cert-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0.45rem 0 0.7rem;
+      color: #0f172a;
+    }
+
+    .cert-cadet-name {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #1d4ed8;
+      border-bottom: 2px solid #94a3b8;
+      display: inline-block;
+      padding: 0.15rem 1.5rem;
+      margin: 0.4rem 0 0.75rem;
+    }
+
+    .cert-meta-row {
+      margin-top: 1.15rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #cbd5e1;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: #334155;
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printable-cert-sheet, #printable-cert-sheet * { visibility: visible; }
+      #printable-cert-sheet {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 2rem;
+        border: 8px double #1e3a8a;
+      }
+    }
+
+    .tracker-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+    }
+
+    .tracker-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    .tracker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.8rem;
+    }
+
+    .sat-cell {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-family: var(--mono);
+    }
+
+    .sat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; margin-bottom: 0.2rem; }
+    .sat-val { font-size: 1rem; font-weight: 700; color: var(--accent); }
+
+    .obs-form {
+      margin-top: 0.85rem;
+      padding-top: 0.85rem;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+    }
+
+    .obs-form input {
+      width: 130px;
+      padding: 0.4rem 0.55rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+
+    .filter-btn {
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      text-decoration: none;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.7rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 0.9rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.65rem;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+    }
+
+    .pill {
+      padding: 0.18rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .st-ACTIVE { color: var(--ok); border-color: rgba(56, 178, 123, 0.4); }
+    .st-IN\ DEVELOPMENT { color: var(--warn); border-color: rgba(214, 158, 46, 0.4); }
+    .st-COMPLETED { color: var(--done); border-color: rgba(99, 179, 237, 0.4); }
+
+    .card h3 { font-size: 1.06rem; margin-bottom: 0.3rem; }
+    .platform { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-bottom: 0.65rem; }
+    .card p { font-size: 0.9rem; color: #d6dde8; white-space: pre-line; }
+
+    .card-footer {
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(37, 46, 61, 0.65);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .card-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+    .link-btn {
+      color: var(--accent);
+      text-decoration: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      cursor: pointer;
+    }
+
+    .del-btn {
+      color: #ff9999;
+      background: rgba(229, 83, 83, 0.12);
+      border: 1px solid rgba(229, 83, 83, 0.45);
+      padding: 0.25rem 0.55rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      cursor: pointer;
+    }
+
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.75rem 0;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .spec-table td {
+      padding: 0.32rem 0;
+      border-bottom: 1px dashed rgba(37, 46, 61, 0.8);
+      vertical-align: top;
+    }
+
+    .spec-table td:first-child { color: var(--muted); width: 42%; }
+    .spec-table td:last-child { color: var(--accent); text-align: right; }
+
+    .brief-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      text-decoration: none;
+      color: var(--text);
+      display: block;
+      transition: border-color 0.15s ease;
+    }
+
+    .brief-card:hover { border-color: var(--accent); }
+    .brief-cat { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-transform: uppercase; }
+    .brief-title { font-weight: 700; margin: 0.25rem 0 0.35rem; font-size: 1rem; }
+    .brief-desc { font-size: 0.86rem; color: var(--muted); }
+
+    .share-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.15rem;
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    form.cmd-form {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.35rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .full-span { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.92rem;
+    }
+
+    textarea { font-family: var(--mono); font-size: 0.85rem; }
+
+    button.submit-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      padding: 0.75rem 1.1rem;
+      font-family: var(--mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    .alert-msg {
+      background: rgba(229, 83, 83, 0.14);
+      border: 1px solid rgba(229, 83, 83, 0.45);
+      color: #ffb4b4;
+      padding: 0.65rem 0.85rem;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      margin-bottom: 0.85rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.75rem 1.25rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="starfield-bg" aria-hidden="true"></div>
+  <div class="telemetry-bar">
+    <div class="telemetry-group">
+      <span><span class="status-dot"></span>MODE: <span class="val-bright">{% if is_team %}TEAM COMMAND ({{ operator }}){% else %}PUBLIC VIEW{% endif %}</span></span>
+      <span>LUNAR: <span class="val-bright">{{ planet_data.lunar.phase_name }} ({{ planet_data.lunar.illumination }}%)</span></span>
+      <span>NEO WATCH: <span class="val-bright">{{ nasa_feed.neo_count }}</span></span>
+      <span>SWPC KP: <span class="val-bright">{{ space_wx.kp }}</span> ({{ space_wx.scale }})</span>
+    </div>
+    <div class="telemetry-group">
+      <span>UTC CLOCK: <span id="utc-clock" class="val-bright">LOADING...</span></span>
+    </div>
+  </div>
+
+  {% if banner and banner.message %}
+  <div class="div-banner lvl-{{ banner.level or 'INFO' }}">
+    <div>
+      <strong>[{{ banner.level or "DISPATCH" }}]</strong> {{ banner.message }}
+    </div>
+    <div style="font-size:0.72rem; opacity:0.85;">
+      {{ banner.author }} &bull; {{ banner.updated_utc }}
+    </div>
+  </div>
+  {% endif %}
+
+  <header class="hero">
+    <div class="container">
+      <div class="hero-top-row">
+        <div class="division-tag">Vortex Ghost Division // Planetary Tracking, Deep Space &amp; Cadet Academy</div>
+        <button type="button" class="kids-switch-pill" id="kid-mode-toggle" aria-pressed="true">
+          <span id="kid-toggle-text">KIDS EDITION: ON</span>
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </button>
+      </div>
+
+      <div class="hero-inner">
+        <div>
+          <h1>Vortex Ghost Aerospace</h1>
+          <p class="hero-sub">
+            Aerospace Exploration &amp; Research — live planetary &amp; lunar tracking, kid-friendly space calculators, printable cadet certificates, exoplanet search, and team operations.
+          </p>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric-box">
+            <div class="metric-label">Tracked Worlds</div>
+            <div class="metric-val">{{ planet_data.planets|length }} + MOON</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Team Missions</div>
+            <div class="metric-val">{{ total_missions }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tab-nav-wrap" aria-label="Primary Division Tabs">
+    <div class="tab-nav">
+      <button type="button" class="tab-btn active" data-tab="all">All Modules</button>
+      <button type="button" class="tab-btn" data-tab="planets">Planetary &amp; Kid Lab</button>
+      <button type="button" class="tab-btn" data-tab="geoscience">Geoscience</button>
+      <button type="button" class="tab-btn" data-tab="simulators">Flight Sim &amp; Rocket Lab</button>
+      <button type="button" class="tab-btn" data-tab="guestbook">Ask Mission Control</button>
+      <button type="button" class="tab-btn" data-tab="skyphotos">Moon &amp; Sky Photos</button>
+      <button type="button" class="tab-btn" data-tab="academy">Cadet Academy &amp; Certificate</button>
+      <button type="button" class="tab-btn" data-tab="exoplanets">Exoplanets &amp; Search</button>
+      <button type="button" class="tab-btn" data-tab="probes">Probes &amp; Solar Activity</button>
+      <button type="button" class="tab-btn" data-tab="discoveries">NASA Imagery</button>
+      <button type="button" class="tab-btn" data-tab="missions">Team Missions &amp; LEO</button>
+      <button type="button" class="tab-btn" data-tab="hardware">Hardware &amp; Portals</button>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- PLANETARY, LUNAR, SIZE SCALE & AGE/WEIGHT LAB -->
+    <section class="module-section" data-module="planets" id="planetary-tracker">
+      <div class="sec-head">
+        <h2 class="sec-title">Live Planetary, Lunar &amp; Night-Sky Visibility Tracker</h2>
+        <span class="sec-meta" id="planet-epoch">{{ planet_data.timestamp_utc }}</span>
+      </div>
+
+      <div class="planet-layout">
+        <div class="orbit-box">
+          <div class="orbit-controls">
+            <span>ECLIPTIC ORBIT PLOT</span>
+            <div style="display:flex; gap:0.35rem;">
+              <button type="button" class="mini-btn active" id="scale-inner">INNER (0-2 AU)</button>
+              <button type="button" class="mini-btn" id="scale-full">FULL SYSTEM (31 AU)</button>
+            </div>
+          </div>
+          <canvas id="orbit-canvas" width="450" height="450"></canvas>
+          <div class="scrubber-bar">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+              <span>TIME OFFSET: <strong id="scrubber-label" class="val-bright">+0.0 DAYS (LIVE)</strong></span>
+              <button type="button" class="mini-btn" id="scrubber-reset">RESET TO NOW</button>
+            </div>
+            <input type="range" id="time-scrubber" min="-365" max="730" step="1" value="0" aria-label="Solar System Day Offset">
+          </div>
+        </div>
+
+        <div class="planet-inspector">
+          <div>
+            <div class="mono" style="font-size:0.72rem; color:var(--muted); margin-bottom:0.4rem;">SELECT TARGET PLANET</div>
+            <div class="planet-chips" id="planet-chips"></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; flex-wrap:wrap;">
+            <div>
+              <h3 id="insp-name" style="font-size:1.25rem;">Mars</h3>
+              <div class="mono" id="insp-class" style="font-size:0.78rem; color:var(--muted);">Terrestrial / Frontier</div>
+            </div>
+            <button type="button" class="mini-btn" id="jpl-verify-btn">VERIFY WITH JPL HORIZONS</button>
+          </div>
+
+          <div class="kid-box kid-only" id="kid-fact-box">
+            <strong>Fun Fact:</strong> <span id="insp-fact"></span>
+            <div style="margin-top:0.25rem; font-size:0.8rem; color:#a8d5ff;">
+              <strong>Car Trip Check:</strong> <span id="insp-kid-trip"></span>
+            </div>
+          </div>
+
+          <div class="jpl-strip">
+            <span>JPL EPHEMERIS: <span id="jpl-result" class="val-bright">READY (CLICK VERIFY FOR EXACT RANGE)</span></span>
+          </div>
+
+          <div class="p-stats-grid">
+            <div class="p-stat">
+              <div class="p-stat-label">Distance From Sun</div>
+              <div class="p-stat-val" id="insp-sun-au">-- AU</div>
+            </div>
+            <div class="p-stat">
+              <div class="p-stat-label">Distance From Earth</div>
+              <div class="p-stat-val" id="insp-earth-dist">--</div>
+            </div>
+            <div class="p-stat">
+              <div class="p-stat-label">1-Way Radio Light-Time</div>
+              <div class="p-stat-val" id="insp-light-time">--</div>
+            </div>
+            <div class="p-stat">
+              <div class="p-stat-label">Tonight's Sky Window</div>
+              <div class="p-stat-val" id="insp-vis-win">--</div>
+            </div>
+            <div class="p-stat">
+              <div class="p-stat-label">Est. Probe Transit</div>
+              <div class="p-stat-val" id="insp-transit">--</div>
+            </div>
+            <div class="p-stat">
+              <div class="p-stat-label">Orbital Speed</div>
+              <div class="p-stat-val" id="insp-speed">-- km/s</div>
+            </div>
+          </div>
+
+          <div class="size-scale-box kid-only">
+            <div style="display:flex; justify-content:space-between;">
+              <span>SIZE COMPARISON: EARTH vs. <strong id="size-target-label">MARS</strong></span>
+              <span id="size-ratio-label" class="val-bright">--</span>
+            </div>
+            <canvas id="size-canvas" width="420" height="76"></canvas>
+          </div>
+
+          <div class="lunar-strip">
+            <div>
+              <div style="font-size:0.68rem; color:var(--muted);">EARTH'S MOON // LIVE PHASE</div>
+              <strong style="color:var(--accent);" id="lunar-phase">{{ planet_data.lunar.phase_name }}</strong> (<span id="lunar-illum">{{ planet_data.lunar.illumination }}</span>% illum)
+              <div style="font-size:0.72rem; color:var(--ok); margin-top:0.2rem;" id="lunar-sky-quality">{{ planet_data.lunar.sky_quality }}</div>
+            </div>
+            <div>
+              <div style="font-size:0.68rem; color:var(--muted);">LUNAR RANGE &amp; AGE</div>
+              <span class="val-bright" id="lunar-dist">{{ planet_data.lunar.dist_km }} km</span> &bull; <span id="lunar-age">{{ planet_data.lunar.age_days }}</span>d
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- YOUR AGE & WEIGHT ON OTHER WORLDS -->
+      <div class="calc-panel kid-only">
+        <div class="sec-head" style="margin-bottom:0.5rem; padding-bottom:0.35rem;">
+          <h3 class="sec-title" style="font-size:0.84rem;">Cadet Lab // Your Age &amp; Weight Across the Solar System</h3>
+          <span class="sec-meta">BASED ON ORBIT PERIOD &amp; SURFACE GRAVITY</span>
+        </div>
+        <div class="calc-inputs">
+          <label style="margin:0; display:flex; align-items:center; gap:0.4rem;">
+            EARTH AGE (YRS):
+            <input type="number" id="cadet-age" min="1" max="120" value="10">
+          </label>
+          <label style="margin:0; display:flex; align-items:center; gap:0.4rem;">
+            EARTH WEIGHT (LBS):
+            <input type="number" id="cadet-weight" min="10" max="500" value="80">
+          </label>
+          <button type="button" class="mini-btn" id="preset-kid">KID PRESET (10 YRS / 80 LBS)</button>
+          <button type="button" class="mini-btn" id="preset-teen">TEEN PRESET (15 YRS / 130 LBS)</button>
+        </div>
+        <div class="calc-results" id="cadet-calc-grid"></div>
+      </div>
+
+      <!-- ALL-50-STATES NIGHT-SKY & AURORA GO/NO-GO SCORECARD -->
+      <div class="calc-panel" style="margin-top:1rem;">
+        <div class="sec-head" style="margin-bottom:0.55rem; padding-bottom:0.35rem;">
+          <h3 class="sec-title" style="font-size:0.84rem;">All-50-States Night-Sky &amp; Aurora Go/No-Go Scorecard</h3>
+          <span class="sec-meta" id="sky-office-meta">NWS {{ sky_scorecard.office }} // LIVE SKY + LUNAR + SWPC KP</span>
+        </div>
+
+        <div class="calc-inputs">
+          <label style="margin:0; display:flex; align-items:center; gap:0.45rem; flex:1; min-width:240px;">
+            U.S. STATE:
+            <select id="sky-state-select" style="max-width:260px; padding:0.42rem 0.55rem; font-family:var(--mono); font-size:0.78rem;">
+              {% for code, info in us_states.items() %}
+              <option value="{{ code }}" {% if code == 'AL' %}selected{% endif %}>{{ code }} — {{ info.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <input type="text" id="sky-custom-lat" placeholder="Opt. Lat (33.17)" style="width:125px;">
+          <input type="text" id="sky-custom-lon" placeholder="Opt. Lon (-86.25)" style="width:130px;">
+          <button type="button" class="mini-btn active" id="sky-check-btn">UPDATE SKY CHECK</button>
+        </div>
+
+        <div class="calc-results">
+          <div class="calc-card">
+            <div class="p-stat-label">Observing Verdict</div>
+            <div class="p-stat-val" id="sky-verdict" style="color:var(--ok);">{{ sky_scorecard.verdict }}</div>
+          </div>
+          <div class="calc-card">
+            <div class="p-stat-label">Sky Quality Score</div>
+            <div class="p-stat-val" id="sky-score-val">{{ sky_scorecard.sky_score }} / 100</div>
+          </div>
+          <div class="calc-card">
+            <div class="p-stat-label">Tonight's NWS Sky</div>
+            <div class="p-stat-val" id="sky-forecast-txt" style="font-size:0.8rem;">{{ sky_scorecard.short_forecast }} ({{ sky_scorecard.temp }})</div>
+          </div>
+          <div class="calc-card">
+            <div class="p-stat-label">State Aurora Threshold</div>
+            <div class="p-stat-val" id="sky-aurora-txt" style="font-size:0.8rem;">{{ sky_scorecard.aurora_status }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="planet-table-wrap">
+        <table class="planet-table">
+          <thead>
+            <tr>
+              <th>Body</th>
+              <th>Sun (AU)</th>
+              <th>Earth (AU)</th>
+              <th>1-Way Signal</th>
+              <th>Observing Window</th>
+              <th>Est. Transit</th>
+              <th>Speed</th>
+            </tr>
+          </thead>
+          <tbody id="planet-table-body">
+            {% for p in planet_data.planets %}
+            <tr data-pid="{{ p.id }}" style="cursor:pointer;">
+              <td><span class="p-dot" style="background:{{ p.color }};"></span><strong>{{ p.name }}</strong></td>
+              <td>{{ p.sun_au }}</td>
+              <td>{{ p.earth_au }}</td>
+              <td>{{ p.light_time }}</td>
+              <td>{{ p.visibility_window }}</td>
+              <td>{{ p.transit_est }}</td>
+              <td>{{ p.speed_kms }} km/s</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CADET ACADEMY: WORD OF THE DAY, GLOSSARY, QUIZ & PRINTABLE CERTIFICATE -->
+    <section class="module-section kid-only" data-module="academy" id="cadet-academy">
+      <div class="sec-head">
+        <h2 class="sec-title">Cadet Academy // Space Terms, Quiz &amp; Printable Certificate</h2>
+        <span class="sec-meta">VORTEX GHOST RADAR &amp; SPACE LEARNING</span>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:1.5rem;">
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">SPACE WORD OF THE DAY</span>
+              <span class="pill st-ACTIVE">GLOSSARY</span>
+            </div>
+            <h3>{{ word_of_day.term }}</h3>
+            <p style="margin-top:0.4rem;">{{ word_of_day.kid_desc }}</p>
+          </div>
+        </div>
+
+        <div class="card" id="cadet-quiz-card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright" id="quiz-progress">CADET QUIZ // QUESTION 1 OF 4</span>
+              <span class="pill" id="quiz-score">SCORE: 0 / 4</span>
+            </div>
+            <h3 id="quiz-question">Loading question...</h3>
+            <div id="quiz-options"></div>
+            <div id="quiz-feedback" class="mono" style="font-size:0.78rem; color:var(--ok); margin-top:0.65rem;"></div>
+          </div>
+          <div class="card-footer">
+            <button type="button" class="mini-btn" id="quiz-next-btn">NEXT QUESTION &rarr;</button>
+            <button type="button" class="mini-btn" id="quiz-reset-btn">RESTART QUIZ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRINTABLE CADET CERTIFICATE -->
+      <div class="cert-panel" id="cert-builder-box">
+        <div class="sec-head" style="margin-bottom:0.75rem; padding-bottom:0.4rem;">
+          <h3 class="sec-title" style="font-size:0.86rem;">Official Space Cadet Completion Certificate</h3>
+          <span class="sec-meta" id="cert-unlock-status">COMPLETE ALL 4 QUIZ QUESTIONS OR ENTER NAME BELOW TO PRINT</span>
+        </div>
+
+        <div class="calc-inputs" style="margin-top:0;">
+          <label style="margin:0; display:flex; align-items:center; gap:0.5rem; flex:1; min-width:240px;">
+            CADET NAME:
+            <input type="text" id="cert-name-input" placeholder="Enter Cadet's Full Name..." style="width:100%; max-width:300px;">
+          </label>
+          <button type="button" class="mini-btn active" id="print-cert-btn" style="padding:0.55rem 0.95rem;">PRINT / SAVE CERTIFICATE (PDF)</button>
+        </div>
+
+        <div class="cert-sheet" id="printable-cert-sheet">
+          <div class="cert-org">Vortex Ghost Aerospace Exploration &amp; Research</div>
+          <div class="cert-title">Junior Space Cadet Certificate</div>
+          <p style="font-size:0.95rem; color:#334155;">This certifies that</p>
+          <div class="cert-cadet-name" id="cert-display-name">Junior Space Explorer</div>
+          <p style="font-size:0.95rem; color:#334155; max-width:600px; margin:0 auto;">
+            has completed the <strong>Vortex Ghost Cadet Academy</strong> planetary tracking, solar system scale, and orbital science challenge.
+          </p>
+          <div class="cert-meta-row">
+            <div><strong>QUIZ SCORE:</strong> <span id="cert-display-score">0 / 4</span></div>
+            <div><strong>DATE ISSUED:</strong> <span id="cert-display-date">{{ nasa_feed.day_key }} UTC</span></div>
+            <div><strong>COMMAND:</strong> Ghost 1 // Vortex Ghost Division</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top:1.5rem;">
+        {% for g in glossary %}
+        <article class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">TERM // 0{{ loop.index }}</span>
+            </div>
+            <h3>{{ g.term }}</h3>
+            <p>{{ g.kid_desc }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- GEOSCIENCE & EARTH SYSTEMS (FOR YANCEY) -->
+    <section class="module-section" data-module="geoscience" id="geoscience-module">
+      <div class="sec-head">
+        <h2 class="sec-title">Geoscience &amp; Earth Systems</h2>
+        <span class="sec-meta">TECTONICS, SEISMOLOGY &amp; USGS EARTHQUAKE FEED</span>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:1.75rem;">
+        {% for gt in geoscience_topics %}
+        <article class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">{{ gt.code }}</span>
+              <span class="pill">{{ gt.focus }}</span>
+            </div>
+            <h3>{{ gt.title }}</h3>
+            <p>{{ gt.summary }}</p>
+            <div class="kid-box kid-only" style="margin-top:0.75rem;">
+              <strong>Kid Note:</strong> {{ gt.kid_note }}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      <div class="sec-head">
+        <h3 class="sec-title" id="eq-feed-title" style="font-size:0.84rem;">Live USGS Earthquakes // Global (M 2.5+)</h3>
+        <div class="filters" id="eq-filter-btns">
+          <button type="button" class="mini-btn active" data-mag="2.5" data-region="global">GLOBAL M 2.5+</button>
+          <button type="button" class="mini-btn" data-mag="4.5" data-region="global">MAJOR M 4.5+</button>
+          <button type="button" class="mini-btn" data-mag="1.0" data-region="se">SE / AL REGION</button>
+        </div>
+      </div>
+
+      <div class="grid-2" id="usgs-eq-grid">
+        {% for q in earthquakes %}
+        <div class="swx-item" style="margin-bottom:0; background:var(--panel);">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+            <strong style="color:var(--warn); font-size:0.9rem;">M {{ q.mag }} &bull; {{ q.place }}</strong>
+            <span style="color:var(--muted);">{{ q.time_utc }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.35rem; color:var(--muted);">
+            <span>Depth: <strong style="color:var(--accent);">{{ q.depth }}</strong></span>
+            <a href="{{ q.url }}" target="_blank" rel="noopener noreferrer" class="link-btn">USGS RECORD &nearr;</a>
+          </div>
+        </div>
+        {% else %}
+        <div class="card"><p style="color:var(--muted);">No earthquakes matched this filter window.</p></div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- NEW EXOPLANETS & LIVE SEARCH -->
+    <section class="module-section" data-module="exoplanets" id="exoplanet-catalog">
+      <div class="sec-head">
+        <h2 class="sec-title" id="exo-section-title">Confirmed New Exoplanets Catalog</h2>
+        <span class="sec-meta">NASA EXOPLANET ARCHIVE // AUTO-SYNCED DAILY</span>
+      </div>
+
+      <form class="search-row" id="exo-search-form">
+        <input type="text" id="exo-search-input" placeholder="Search exoplanet or host star (e.g., TRAPPIST-1, Kepler-186, TOI)..." aria-label="Search exoplanets">
+        <button type="submit" class="mini-btn" style="padding:0.6rem 0.9rem;">SEARCH ARCHIVE</button>
+        <button type="button" class="mini-btn" id="exo-reset-btn" style="padding:0.6rem 0.8rem;">RECENT DISCOVERIES</button>
+      </form>
+
+      <div class="grid-4" id="exoplanet-grid">
+        {% for ex in nasa_feed.exoplanets %}
+        <article class="exo-card">
+          <div class="card-top" style="margin-bottom:0;">
+            <span class="mono val-bright">{{ ex.year }} DISCOVERY</span>
+            <span class="pill">{{ ex.method }}</span>
+          </div>
+          <h3 style="font-size:1.05rem;">{{ ex.name }}</h3>
+          <div class="mono" style="font-size:0.78rem; color:var(--muted);">Host Star: {{ ex.host }}</div>
+          <div class="exo-meta">
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">DISTANCE</span><strong>{{ ex.distance }}</strong></div>
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">RADIUS</span><strong>{{ ex.radius }}</strong></div>
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">EQ. TEMP</span><strong>{{ ex.temp }}</strong></div>
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">ORBIT PERIOD</span><strong>{{ ex.period }}</strong></div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- DEEP-SPACE PROBES & SOLAR ACTIVITY (DONKI) -->
+    <section class="module-section" data-module="probes" id="probes-solar">
+      <div class="sec-head">
+        <h2 class="sec-title">Active Deep-Space Probes &amp; Milestones</h2>
+        <a href="https://eyes.nasa.gov/apps/solar-system/" target="_blank" rel="noopener noreferrer" class="mini-btn">OPEN NASA EYES 3D &nearr;</a>
+      </div>
+      <div class="grid-4" style="margin-bottom:2.25rem;">
+        {% for pr in probes %}
+        <article class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">{{ pr.code }}</span>
+              <span class="pill st-ACTIVE">{{ pr.status }}</span>
+            </div>
+            <h3>{{ pr.name }}</h3>
+            <div class="platform">{{ pr.target }}</div>
+            <p>{{ pr.summary }}</p>
+          </div>
+          <div class="card-footer">
+            <span style="font-size:0.72rem; color:var(--muted);">{{ pr.range_note }}</span>
+            <a href="{{ pr.eyes_url }}" target="_blank" rel="noopener noreferrer" class="link-btn">3D TRACK &nearr;</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      <div class="sec-head">
+        <h2 class="sec-title">Solar Flares &amp; CME Activity (NASA DONKI)</h2>
+        <span class="sec-meta">14-DAY HELIOPHYSICS FEED</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">SOLAR FLARES (FLR)</span>
+              <span class="pill">NASA DONKI</span>
+            </div>
+            {% if donki_wx.flares %}
+              {% for fl in donki_wx.flares %}
+              <div class="swx-item">
+                <div style="display:flex; justify-content:space-between; gap:0.5rem;">
+                  <strong style="color:var(--warn);">CLASS {{ fl.class_type }}</strong>
+                  <span style="color:var(--muted);">{{ fl.peak_time }}</span>
+                </div>
+                <div style="color:var(--muted); margin-top:0.2rem;">Region {{ fl.region }} &bull; {{ fl.location }}</div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="color:var(--muted);">No major solar flare records returned in the current 14-day window.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">CORONAL MASS EJECTIONS (CME)</span>
+              <span class="pill">NASA DONKI</span>
+            </div>
+            {% if donki_wx.cmes %}
+              {% for cm in donki_wx.cmes %}
+              <div class="swx-item">
+                <div style="display:flex; justify-content:space-between; gap:0.5rem;">
+                  <strong style="color:var(--done);">{{ cm.speed }} ({{ cm.type }})</strong>
+                  <span style="color:var(--muted);">{{ cm.start_time }}</span>
+                </div>
+                <div style="color:var(--muted); margin-top:0.2rem;">{{ cm.note }}</div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="color:var(--muted);">No recent CME events returned in the current 14-day window.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NASA DAILY SPOTLIGHT & INTERACTIVE GALLERY -->
+    <section class="module-section" data-module="discoveries" id="nasa-discoveries">
+      <div class="sec-head">
+        <h2 class="sec-title">Daily NASA Discovery Spotlight</h2>
+        <span class="sec-meta">AUTO-UPDATES DAILY // {{ nasa_feed.apod.date or nasa_feed.day_key }}</span>
+      </div>
+      <div class="apod-box">
+        {% if nasa_feed.apod.url %}
+        <div class="apod-media">
+          <img src="{{ nasa_feed.apod.url }}" alt="{{ nasa_feed.apod.title }}">
+        </div>
+        {% endif %}
+        <div class="apod-body">
+          <div class="mono" style="font-size:0.74rem; color:var(--muted);">NASA ASTRONOMY ARCHIVE &bull; {{ nasa_feed.apod.date }}</div>
+          <h3>{{ nasa_feed.apod.title }}</h3>
+          <p>{{ nasa_feed.apod.explanation }}</p>
+        </div>
+      </div>
+
+      <div class="sec-head" style="margin-top:1.75rem;">
+        <h2 class="sec-title" id="gallery-heading">NASA Imagery // Exoplanets &amp; New Worlds</h2>
+        <div class="filters" id="gallery-topic-btns">
+          {% for key, label in gallery_topics.items() %}
+          <button type="button" class="mini-btn {% if key == 'exoplanet' %}active{% endif %}" data-topic="{{ key }}">{{ label }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="grid-3" id="nasa-gallery-grid">
+        {% for item in initial_gallery %}
+        <article class="photo-card">
+          <img class="photo-thumb" src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
+          <div class="photo-content">
+            <div class="mono" style="font-size:0.72rem; color:var(--muted);">{{ item.date_created or "ARCHIVE" }} &bull; {{ item.nasa_id }}</div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- TEAM MISSIONS & LEO TELEMETRY -->
+    <section class="module-section" data-module="missions" id="missions-board">
+      <div class="tracker-panel" style="margin-bottom:2rem;">
+        <div class="tracker-top">
+          <div>
+            ORBITAL TARGET: <span class="val-bright" id="sat-name">{{ sat_wx.name }}</span>
+            &bull; NORAD ID: <span class="val-bright" id="sat-id">{{ sat_wx.norad_id }}</span>
+          </div>
+          <div>
+            STATION PASS (<span id="obs-coord-label">{{ obs_lat }}, {{ obs_lon }}</span>):
+            <span class="val-bright" id="sat-horizon">{% if sat_wx.above_horizon %}ABOVE HORIZON{% else %}BELOW HORIZON{% endif %}</span>
+          </div>
+        </div>
+        <div class="tracker-grid">
+          <div class="sat-cell">
+            <div class="sat-label">Latitude</div>
+            <div class="sat-val" id="sat-lat">{{ sat_wx.lat }}&deg;</div>
+          </div>
+          <div class="sat-cell">
+            <div class="sat-label">Longitude</div>
+            <div class="sat-val" id="sat-lon">{{ sat_wx.lon }}&deg;</div>
+          </div>
+          <div class="sat-cell">
+            <div class="sat-label">Altitude</div>
+            <div class="sat-val" id="sat-alt">{{ sat_wx.alt_km }} km</div>
+          </div>
+          <div class="sat-cell">
+            <div class="sat-label">Slant Range</div>
+            <div class="sat-val" id="sat-range">{{ sat_wx.station_range_km }} km</div>
+          </div>
+          <div class="sat-cell">
+            <div class="sat-label">Azimuth / Elev</div>
+            <div class="sat-val" id="sat-azel">{{ sat_wx.station_az_deg }}&deg; / {{ sat_wx.station_elev_deg }}&deg;</div>
+          </div>
+        </div>
+        <form class="obs-form" id="obs-coord-form">
+          <span>OBSERVER COORDS:</span>
+          <input type="text" id="obs-lat-input" value="{{ obs_lat }}" aria-label="Observer Latitude">
+          <input type="text" id="obs-lon-input" value="{{ obs_lon }}" aria-label="Observer Longitude">
+          <button type="submit" class="mini-btn">UPDATE STATION</button>
+          <button type="button" class="mini-btn" id="obs-reset-btn">SYLACAUGA, AL</button>
+        </form>
+      </div>
+
+      <div class="sec-head">
+        <h2 class="sec-title">Team Mission &amp; Flight Log</h2>
+        <div class="filters">
+          {% for st in ["ALL", "ACTIVE", "IN DEVELOPMENT", "COMPLETED"] %}
+          <a href="{{ url_for('index', status=st) }}" class="filter-btn {% if active_filter == st %}active{% endif %}">{{ st }}</a>
+          {% endfor %}
+          <a href="{{ url_for('export_missions_csv') }}" class="mini-btn">EXPORT CSV</a>
+        </div>
+      </div>
+
+      {% if missions %}
+      <div class="grid-3">
+        {% for m in missions %}
+        <article class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">{{ m.id }}</span>
+              <span class="pill st-{{ m.status }}">{{ m.status }}</span>
+            </div>
+            <h3>{{ m.title }}</h3>
+            <div class="platform">{{ m.platform }}</div>
+            <p>{{ m.notes }}</p>
+          </div>
+          <div class="card-footer">
+            <a href="{{ url_for('mission_detail', mission_id=m.id) }}" class="link-btn">DOSSIER &rarr;</a>
+            {% if is_team %}
+            <div class="card-actions">
+              <a href="{{ url_for('edit_mission', mission_id=m.id) }}" class="link-btn">EDIT</a>
+              <form action="{{ url_for('delete_mission', mission_id=m.id) }}" method="POST" onsubmit="return confirm('Delete mission {{ m.id }}?');" style="display:inline;">
+                <button type="submit" class="del-btn">DELETE</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="card">
+        <p style="color:var(--muted);">
+          No team missions posted yet. {% if is_team %}Use the <strong>Team Mission Dispatch</strong> form below to post a mission.{% else %}Log in with callsign <strong>VGA1</strong> below to post, edit, or delete team missions.{% endif %}
+        </p>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- FLIGHT SIMULATORS: RADIOSONDE TRAJECTORY & ROCKET DELTA-V LAB -->
+    <section class="module-section" data-module="simulators" id="flight-simulators">
+      <div class="sec-head">
+        <h2 class="sec-title">Atmospheric Sounding &amp; Rocket Delta-V Simulators</h2>
+        <span class="sec-meta">PAY-02 BALLOON DRIFT &amp; ORBITAL MECHANICS LAB</span>
+      </div>
+
+      <div class="grid-2">
+        <!-- Radiosonde Balloon Drift Estimator -->
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">PAY-02 SOUNDING SIM</span>
+              <span class="pill st-ACTIVE">BALLOON DRIFT</span>
+            </div>
+            <h3>Radiosonde Trajectory &amp; Landing Estimator</h3>
+            <p style="margin-bottom:0.75rem;">Project burst altitude, total flight time, and recovery coordinates from launch site wind profiles.</p>
+
+            <div class="calc-inputs" style="margin:0.5rem 0;">
+              <label style="margin:0;">LAUNCH LAT <input type="number" step="0.0001" id="bal-lat" value="33.1732"></label>
+              <label style="margin:0;">LAUNCH LON <input type="number" step="0.0001" id="bal-lon" value="-86.2517"></label>
+              <label style="margin:0;">ASCENT (M/S) <input type="number" step="0.5" id="bal-asc" value="5.0"></label>
+              <label style="margin:0;">BURST (M) <input type="number" step="500" id="bal-burst" value="24000"></label>
+              <label style="margin:0;">DESCENT (M/S) <input type="number" step="0.5" id="bal-desc" value="7.5"></label>
+              <label style="margin:0;">WIND (MPH) <input type="number" step="1" id="bal-wind" value="28"></label>
+              <label style="margin:0;">WIND TO (°) <input type="number" step="5" id="bal-dir" value="75"></label>
+            </div>
+
+            <div class="exo-meta" id="bal-results" style="margin-top:0.65rem;">
+              <div><span style="color:var(--muted); display:block; font-size:0.66rem;">FLIGHT DURATION</span><strong id="bal-time">--</strong></div>
+              <div><span style="color:var(--muted); display:block; font-size:0.66rem;">DRIFT RANGE</span><strong id="bal-dist">--</strong></div>
+              <div style="grid-column: 1 / -1;"><span style="color:var(--muted); display:block; font-size:0.66rem;">PREDICTED TOUCHDOWN COORDS</span><strong id="bal-land" style="color:var(--ok);">--</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rocket Delta-V & Mission Planner -->
+        <div class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">ORBITAL PROPULSION</span>
+              <span class="pill">DELTA-V LAB</span>
+            </div>
+            <h3>Rocket Staging &amp; Delta-V Mission Calculator</h3>
+            <p style="margin-bottom:0.75rem;">Calculate total velocity change (&Delta;v), propellant mass ratio, and cruise duration across targets.</p>
+
+            <div class="calc-inputs" style="margin:0.5rem 0;">
+              <label style="margin:0; flex:1;">TARGET DESTINATION
+                <select id="rkt-target" style="padding:0.42rem; font-family:var(--mono); font-size:0.78rem;">
+                  <option value="leo">Low Earth Orbit / ISS (9.4 km/s)</option>
+                  <option value="moon">Lunar Surface Landing (15.2 km/s)</option>
+                  <option value="mars" selected>Mars Surface Entry (18.6 km/s)</option>
+                  <option value="europa">Jupiter / Europa Orbit (26.4 km/s)</option>
+                </select>
+              </label>
+              <label style="margin:0;">PAYLOAD (KG)
+                <input type="number" step="100" id="rkt-payload" value="1200">
+              </label>
+            </div>
+
+            <div class="exo-meta" style="margin-top:0.65rem;">
+              <div><span style="color:var(--muted); display:block; font-size:0.66rem;">REQUIRED DELTA-V</span><strong id="rkt-dv">18.6 km/s</strong></div>
+              <div><span style="color:var(--muted); display:block; font-size:0.66rem;">STAGES NEEDED</span><strong id="rkt-stages">3 Stages (Methalox/Hydrolox)</strong></div>
+              <div><span style="color:var(--muted); display:block; font-size:0.66rem;">EST. LIFTOFF MASS</span><strong id="rkt-mass">--</strong></div>
+              <div><span style="color:var(--muted); display:block; font-size:0.66rem;">CRUISE WINDOW</span><strong id="rkt-cruise">--</strong></div>
+            </div>
+            <div class="kid-box kid-only" style="margin-top:0.65rem;">
+              <strong>Rocket Fact:</strong> <span id="rkt-kid-note">Most of a rocket's weight at liftoff is fuel just to escape Earth's gravity pull!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PUBLIC ASK MISSION CONTROL & CADET GUESTBOOK -->
+    <section class="module-section" data-module="guestbook" id="mission-guestbook">
+      <div class="sec-head">
+        <h2 class="sec-title">Ask Mission Control &amp; Cadet Launch Guestbook</h2>
+        <span class="sec-meta">FIREBASE SYNCED // SPACE &amp; GEOSCIENCE Q&amp;A</span>
+      </div>
+
+      <div class="grid-2">
+        <form class="cmd-form" action="{{ url_for('guestbook_post') }}" method="POST" style="align-content:start;">
+          <div>
+            <label for="gb_name">Your Name / Cadet Callsign</label>
+            <input id="gb_name" type="text" name="gb_name" placeholder="e.g., Cadet Maddox" required>
+          </div>
+          <div>
+            <label for="gb_location">City / State</label>
+            <input id="gb_location" type="text" name="gb_location" placeholder="e.g., Sylacauga, AL">
+          </div>
+          <div class="full-span">
+            <label for="gb_message">Log Entry or Space / Geoscience Question</label>
+            <textarea id="gb_message" name="gb_message" rows="3" placeholder="Sign the launch log or ask Ghost 1 & Yancey a space or geology question..." required></textarea>
+          </div>
+          <div class="full-span">
+            <button type="submit" class="submit-btn">Transmit to Mission Control</button>
+          </div>
+        </form>
+
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+          {% for g in guestbook %}
+          <div class="card" style="padding:0.95rem 1.05rem;">
+            <div>
+              <div class="card-top" style="margin-bottom:0.35rem;">
+                <strong class="val-bright">{{ g.name }} ({{ g.location }})</strong>
+                <span class="mono" style="color:var(--muted); font-size:0.7rem;">{{ g.created_utc }}</span>
+              </div>
+              <p style="font-size:0.88rem;">{{ g.message }}</p>
+              {% if g.reply %}
+              <div class="kid-box" style="margin-top:0.55rem; padding:0.5rem 0.65rem; font-size:0.82rem;">
+                <strong>[{{ g.reply_by or "MISSION CONTROL" }}]:</strong> {{ g.reply }}
+              </div>
+              {% endif %}
+            </div>
+            {% if is_team %}
+            <div style="margin-top:0.65rem; padding-top:0.55rem; border-top:1px solid var(--border); display:flex; gap:0.45rem; flex-wrap:wrap;">
+              <form action="{{ url_for('guestbook_reply', entry_id=g.id) }}" method="POST" style="display:flex; gap:0.4rem; flex:1;">
+                <input type="text" name="gb_reply" value="{{ g.reply }}" placeholder="Reply as {{ operator }}..." style="padding:0.3rem 0.5rem; font-size:0.78rem;">
+                <button type="submit" class="mini-btn active">REPLY</button>
+              </form>
+              <form action="{{ url_for('guestbook_delete', entry_id=g.id) }}" method="POST" onsubmit="return confirm('Delete guestbook entry?');">
+                <button type="submit" class="del-btn">DEL</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="card">
+            <p style="color:var(--muted);">No visitor transmissions yet. Be the first cadet or explorer to sign the Vortex Ghost logbook!</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- MOON & SKY PHOTOS UPLOAD GALLERY -->
+    <section class="module-section" data-module="skyphotos" id="moon-sky-photos">
+      <div class="sec-head">
+        <h2 class="sec-title">Moon &amp; Night-Sky Field Photo Gallery</h2>
+        <span class="sec-meta">TEAM MOON &amp; SKY CAPTURES</span>
+      </div>
+
+      {% if is_team %}
+      <form class="cmd-form" action="{{ url_for('upload_sky_photo') }}" method="POST" enctype="multipart/form-data" style="margin-bottom:1.5rem;">
+        <div>
+          <label for="photo_subject">Sky Subject</label>
+          <select id="photo_subject" name="photo_subject">
+            <option value="Moon">Moon</option>
+            <option value="Night Sky & Stars">Night Sky &amp; Stars</option>
+            <option value="Planets">Planets</option>
+            <option value="Aurora / Sky Glow">Aurora / Sky Glow</option>
+            <option value="Daytime Sky & Clouds">Daytime Sky &amp; Clouds</option>
+          </select>
+        </div>
+        <div>
+          <label for="photo_location">Location</label>
+          <input id="photo_location" type="text" name="photo_location" value="Sylacauga, AL" required>
+        </div>
+        <div>
+          <label for="sky_photo">Photo File (JPG, PNG, WEBP)</label>
+          <input id="sky_photo" type="file" name="sky_photo" accept="image/*" required>
+        </div>
+        <div class="full-span">
+          <label for="photo_caption">Observation Notes / Caption</label>
+          <input id="photo_caption" type="text" name="photo_caption" placeholder="e.g., Waxing gibbous moon through scope or clear night sky over Sylacauga...">
+        </div>
+        <div class="full-span">
+          <button type="submit" class="submit-btn">Upload Moon / Sky Photo</button>
+        </div>
+      </form>
+      {% else %}
+      <div class="card" style="margin-bottom:1.35rem;">
+        <p style="color:var(--muted);">
+          Sign in under <strong>Team Command</strong> (callsign <strong>VGA1</strong>) to upload or delete Moon and Night-Sky photos.
+        </p>
+      </div>
+      {% endif %}
+
+      <div class="grid-3" id="team-sky-photo-grid">
+        {% for sp in sky_photos %}
+        <article class="photo-card">
+          <img class="photo-thumb" src="{{ sp.image_url }}" alt="{{ sp.subject }}" loading="lazy">
+          <div class="photo-content">
+            <div class="card-top" style="margin-bottom:0.2rem;">
+              <span class="mono val-bright">{{ sp.subject }}</span>
+              <span class="pill st-ACTIVE">{{ sp.location }}</span>
+            </div>
+            <p>{{ sp.caption }}</p>
+            <div class="card-footer" style="margin-top:auto;">
+              <span style="font-size:0.72rem; color:var(--muted);">{{ sp.author }} &bull; {{ sp.uploaded_utc }}</span>
+              {% if is_team %}
+              <form action="{{ url_for('delete_sky_photo', photo_id=sp.id) }}" method="POST" onsubmit="return confirm('Delete this photo?');" style="display:inline;">
+                <button type="submit" class="del-btn">DELETE</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+        {% else %}
+        <div class="card">
+          <p style="color:var(--muted);">No Moon or Sky photos uploaded yet.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- HARDWARE, BRIEFINGS & SHARE CARD -->
+    <section class="module-section" data-module="hardware" id="hardware-briefings">
+      <div class="sec-head">
+        <h2 class="sec-title">Payload &amp; Hardware Manifest</h2>
+      </div>
+      <div class="grid-3" style="margin-bottom:2.25rem;">
+        {% for p in payloads %}
+        <article class="card">
+          <div>
+            <div class="card-top">
+              <span class="mono val-bright">{{ p.code }}</span>
+              <span class="pill">{{ p.revision }}</span>
+            </div>
+            <h3>{{ p.name }}</h3>
+            <div class="platform">{{ p.subsystem }}</div>
+            <p>{{ p.summary }}</p>
+            <table class="spec-table">
+              {% for k, v in p.specs.items() %}
+              <tr>
+                <td>{{ k }}</td>
+                <td>{{ v }}</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      <div class="sec-head">
+        <h2 class="sec-title">Planetary, Space &amp; Atmospheric Portals</h2>
+      </div>
+      <div class="grid-2">
+        {% for b in briefings %}
+        <a href="{{ b.url }}" target="_blank" rel="noopener noreferrer" class="brief-card">
+          <div class="brief-cat">{{ b.category }}</div>
+          <div class="brief-title">{{ b.title }} &nearr;</div>
+          <div class="brief-desc">{{ b.desc }}</div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <div class="share-box">
+        <div>
+          <div style="font-size:0.7rem; color:var(--muted);">DIVISION DISPATCH BRIEFING</div>
+          <strong id="briefing-summary">Vortex Ghost Aerospace — Live Planetary &amp; Lunar Telemetry, Cadet Academy &amp; Mission Board</strong>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button type="button" class="mini-btn" id="copy-briefing-btn">COPY BRIEFING SUMMARY</button>
+          <button type="button" class="mini-btn active" id="download-patch-btn">DOWNLOAD PNG TELEMETRY PATCH</button>
+        </div>
+        <canvas id="telemetry-patch-canvas" width="800" height="420" style="display:none;"></canvas>
+      </div>
+    </section>
+
+    <!-- TEAM DISPATCH, BANNER CONTROL OR LOGIN -->
+    <section class="module-section" data-module="missions">
+      {% if is_team %}
+      <div id="dispatch-panel">
+        <div class="sec-head">
+          <h2 class="sec-title">Division Status Banner Control ({{ operator }})</h2>
+          <form action="{{ url_for('team_logout') }}" method="POST" style="display:inline;">
+            <button type="submit" class="link-btn">SIGN OUT ({{ operator }})</button>
+          </form>
+        </div>
+
+        <form class="cmd-form" action="{{ url_for('update_banner') }}" method="POST" style="margin-bottom:2rem;">
+          <div>
+            <label for="banner_level">Banner Level</label>
+            <select id="banner_level" name="banner_level">
+              <option value="INFO" {% if banner.level == "INFO" %}selected{% endif %}>INFO (BLUE)</option>
+              <option value="LIVE" {% if banner.level == "LIVE" %}selected{% endif %}>LIVE OPS (GREEN)</option>
+              <option value="ALERT" {% if banner.level == "ALERT" %}selected{% endif %}>ALERT (AMBER)</option>
+            </select>
+          </div>
+          <div style="grid-column: span 2;">
+            <label for="banner_message">Public Announcement Banner (Leave blank to hide)</label>
+            <input id="banner_message" type="text" name="banner_message" value="{{ banner.message or '' }}" placeholder="e.g., Live Planetary & ISS Telemetry Stream Active Tonight at 21:00 CST">
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button type="submit" class="submit-btn" style="width:100%;">Update Banner</button>
+          </div>
+        </form>
+
+        <div class="sec-head">
+          <h2 class="sec-title">Team Mission Dispatch // Post New Mission</h2>
+        </div>
+        <form class="cmd-form" action="{{ url_for('add_log') }}" method="POST">
+          <div>
+            <label for="mission_id">Mission ID</label>
+            <input id="mission_id" type="text" name="mission_id" placeholder="e.g., VGA-101" required>
+          </div>
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="IN DEVELOPMENT">IN DEVELOPMENT</option>
+              <option value="COMPLETED">COMPLETED</option>
+            </select>
+          </div>
+          <div>
+            <label for="platform">Platform / Hardware</label>
+            <input id="platform" type="text" name="platform" placeholder="e.g., PAY-01 • Field Unit" required>
+          </div>
+          <div class="full-span">
+            <label for="title">Mission Title</label>
+            <input id="title" type="text" name="title" placeholder="Enter mission title" required>
+          </div>
+          <div class="full-span">
+            <label for="objectives">Mission Objectives</label>
+            <input id="objectives" type="text" name="objectives" placeholder="Primary test or flight goals">
+          </div>
+          <div class="full-span">
+            <label for="notes">Telemetry &amp; Field Notes</label>
+            <textarea id="notes" name="notes" rows="3" placeholder="Enter operational or telemetry log details..." required></textarea>
+          </div>
+          <div class="full-span">
+            <label for="takeaways">Post-Test Takeaways</label>
+            <input id="takeaways" type="text" name="takeaways" placeholder="Key findings or follow-up actions">
+          </div>
+          <div class="full-span">
+            <button type="submit" class="submit-btn">Publish Mission to Board</button>
+          </div>
+        </form>
+      </div>
+      {% else %}
+      <div id="team-access">
+        <div class="sec-head">
+          <h2 class="sec-title">Team Command Access (Post / Edit / Delete / Banner)</h2>
+        </div>
+        {% if auth_msg %}
+        <div class="alert-msg">{{ auth_msg }}</div>
+        {% endif %}
+        <form class="cmd-form" action="{{ url_for('team_login') }}" method="POST">
+          <div>
+            <label for="operator">Team Callsign</label>
+            <input id="operator" type="text" name="operator" placeholder="VGA1" required>
+          </div>
+          <div>
+            <label for="passcode">Team Passcode</label>
+            <input id="passcode" type="password" name="passcode" placeholder="Enter team passcode" required>
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button type="submit" class="submit-btn" style="width:100%;">Unlock Team Controls</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <footer>
+    VORTEX GHOST AEROSPACE EXPLORATION &amp; RESEARCH &bull; PLANETARY LAB, CADET ACADEMY &amp; DEEP-SPACE TRACKING
+  </footer>
+
+  <script>
+    // Top-Right Kids Edition Pill Toggle Switch
+    let kidModeOn = true;
+    const kidToggleBtn = document.getElementById("kid-mode-toggle");
+    const kidToggleText = document.getElementById("kid-toggle-text");
+    const kidElements = document.querySelectorAll(".kid-only");
+
+    kidToggleBtn.addEventListener("click", () => {
+      kidModeOn = !kidModeOn;
+      kidToggleText.textContent = `KIDS EDITION: ${kidModeOn ? "ON" : "OFF"}`;
+      kidToggleBtn.classList.toggle("off", !kidModeOn);
+      kidToggleBtn.setAttribute("aria-pressed", kidModeOn ? "true" : "false");
+      kidElements.forEach(el => el.classList.toggle("hidden-kid", !kidModeOn));
+      if (kidModeOn) drawSizeCanvas();
+    });
+
+    // Top Toggle Tabs
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const moduleSections = document.querySelectorAll("section.module-section");
+
+    function activateTab(tabName) {
+      tabBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tabName));
+      moduleSections.forEach(sec => {
+        const mods = (sec.dataset.module || "").split(" ");
+        const show = tabName === "all" || mods.includes(tabName);
+        sec.classList.toggle("hidden-tab", !show);
+      });
+      if (tabName === "planets" || tabName === "all") {
+        drawOrbitCanvas();
+        drawSizeCanvas();
+      }
+    }
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+    });
+
+    // UTC Clock
+    function updateClock() {
+      const now = new Date();
+      const el = document.getElementById("utc-clock");
+      if (el) {
+        el.textContent = now.toISOString().replace("T", " ").slice(0, 19) + " UTC";
+      }
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Live ISS + Station Pass Telemetry
+    let obsLat = {{ obs_lat }};
+    let obsLon = {{ obs_lon }};
+
+    async function refreshSatellite() {
+      try {
+        const url = `/api/satellite?lat=${encodeURIComponent(obsLat)}&lon=${encodeURIComponent(obsLon)}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const d = await res.json();
+        document.getElementById("sat-name").textContent = d.name;
+        document.getElementById("sat-id").textContent = d.norad_id;
+        document.getElementById("sat-lat").innerHTML = `${d.lat}&deg;`;
+        document.getElementById("sat-lon").innerHTML = `${d.lon}&deg;`;
+        document.getElementById("sat-alt").textContent = `${d.alt_km} km`;
+        document.getElementById("sat-range").textContent = `${d.station_range_km} km`;
+        document.getElementById("sat-azel").innerHTML = `${d.station_az_deg}&deg; / ${d.station_elev_deg}&deg;`;
+        document.getElementById("sat-horizon").textContent = d.above_horizon ? "ABOVE HORIZON" : "BELOW HORIZON";
+      } catch (_) {}
+    }
+
+    document.getElementById("obs-coord-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const latVal = parseFloat(document.getElementById("obs-lat-input").value);
+      const lonVal = parseFloat(document.getElementById("obs-lon-input").value);
+      if (!Number.isNaN(latVal) && !Number.isNaN(lonVal)) {
+        obsLat = latVal;
+        obsLon = lonVal;
+        document.getElementById("obs-coord-label").textContent = `${obsLat.toFixed(2)}, ${obsLon.toFixed(2)}`;
+        refreshSatellite();
+      }
+    });
+
+    document.getElementById("obs-reset-btn").addEventListener("click", () => {
+      obsLat = {{ obs_lat }};
+      obsLon = {{ obs_lon }};
+      document.getElementById("obs-lat-input").value = obsLat;
+      document.getElementById("obs-lon-input").value = obsLon;
+      document.getElementById("obs-coord-label").textContent = `${obsLat}, ${obsLon}`;
+      refreshSatellite();
+    });
+
+    refreshSatellite();
+    setInterval(refreshSatellite, 6000);
+
+    // Interactive NASA Image Topic Switcher
+    const galleryBtns = document.querySelectorAll("#gallery-topic-btns button");
+    const galleryGrid = document.getElementById("nasa-gallery-grid");
+    const galleryHeading = document.getElementById("gallery-heading");
+
+    galleryBtns.forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const topic = btn.dataset.topic;
+        galleryBtns.forEach(b => b.classList.toggle("active", b === btn));
+        galleryHeading.textContent = `NASA IMAGERY // ${btn.textContent.toUpperCase()} (LOADING...)`;
+        try {
+          const res = await fetch(`/api/nasa-gallery?topic=${encodeURIComponent(topic)}`);
+          if (!res.ok) return;
+          const payload = await res.json();
+          galleryHeading.textContent = `NASA IMAGERY // ${payload.label.toUpperCase()}`;
+          if (Array.isArray(payload.items) && payload.items.length) {
+            galleryGrid.innerHTML = payload.items.map(item => `
+              <article class="photo-card">
+                <img class="photo-thumb" src="${item.image_url}" alt="${item.title}" loading="lazy">
+                <div class="photo-content">
+                  <div class="mono" style="font-size:0.72rem; color:var(--muted);">${item.date_created || "ARCHIVE"} &bull; ${item.nasa_id}</div>
+                  <h3>${item.title}</h3>
+                  <p>${item.description}</p>
+                </div>
+              </article>
+            `).join("");
+          }
+        } catch (_) {}
+      });
+    });
+
+    // Exoplanet Archive Live Search
+    const exoForm = document.getElementById("exo-search-form");
+    const exoInput = document.getElementById("exo-search-input");
+    const exoGrid = document.getElementById("exoplanet-grid");
+    const exoTitle = document.getElementById("exo-section-title");
+    const initialExoCardsHtml = exoGrid.innerHTML;
+
+    function renderExoCards(items) {
+      if (!items || !items.length) {
+        exoGrid.innerHTML = `<div class="card"><p style="color:var(--muted);">No matching exoplanets found in NASA's archive.</p></div>`;
+        return;
+      }
+      exoGrid.innerHTML = items.map(ex => `
+        <article class="exo-card">
+          <div class="card-top" style="margin-bottom:0;">
+            <span class="mono val-bright">${ex.year} DISCOVERY</span>
+            <span class="pill">${ex.method}</span>
+          </div>
+          <h3 style="font-size:1.05rem;">${ex.name}</h3>
+          <div class="mono" style="font-size:0.78rem; color:var(--muted);">Host Star: ${ex.host}</div>
+          <div class="exo-meta">
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">DISTANCE</span><strong>${ex.distance}</strong></div>
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">RADIUS</span><strong>${ex.radius}</strong></div>
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">EQ. TEMP</span><strong>${ex.temp}</strong></div>
+            <div><span style="color:var(--muted); display:block; font-size:0.66rem;">ORBIT PERIOD</span><strong>${ex.period}</strong></div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    exoForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const q = exoInput.value.trim();
+      if (q.length < 2) return;
+      exoTitle.textContent = `EXOPLANET ARCHIVE // SEARCHING "${q.toUpperCase()}"...`;
+      try {
+        const res = await fetch(`/api/exoplanet-search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        exoTitle.textContent = `EXOPLANET ARCHIVE // RESULTS FOR "${q.toUpperCase()}"`;
+        renderExoCards(data.results || []);
+      } catch (_) {
+        exoTitle.textContent = "CONFIRMED NEW EXOPLANETS CATALOG";
+      }
+    });
+
+    document.getElementById("exo-reset-btn").addEventListener("click", () => {
+      exoInput.value = "";
+      exoTitle.textContent = "CONFIRMED NEW EXOPLANETS CATALOG";
+      exoGrid.innerHTML = initialExoCardsHtml;
+    });
+
+    // Planetary Tracker + Size Canvas + Age/Weight Lab
+    let planets = {{ planet_data.planets | tojson }};
+    let selectedPlanetId = "mars";
+    let maxAuScale = 2.0;
+    let currentDayOffset = 0;
+
+    const chipsWrap = document.getElementById("planet-chips");
+    const tableBody = document.getElementById("planet-table-body");
+    const canvas = document.getElementById("orbit-canvas");
+    const ctx = canvas.getContext("2d");
+    const sizeCanvas = document.getElementById("size-canvas");
+    const sctx = sizeCanvas.getContext("2d");
+    const scrubber = document.getElementById("time-scrubber");
+    const scrubberLabel = document.getElementById("scrubber-label");
+    const jplResult = document.getElementById("jpl-result");
+    const jplBtn = document.getElementById("jpl-verify-btn");
+
+    function drawSizeCanvas() {
+      const earth = planets.find(item => item.id === "earth");
+      const target = planets.find(item => item.id === selectedPlanetId) || planets[0];
+      if (!earth || !target) return;
+
+      const w = sizeCanvas.width;
+      const h = sizeCanvas.height;
+      sctx.clearRect(0, 0, w, h);
+
+      const maxR = Math.max(earth.radius_km, target.radius_km);
+      const maxPx = 28;
+      const rEarthPx = Math.max(4, (earth.radius_km / maxR) * maxPx);
+      const rTargetPx = Math.max(4, (target.radius_km / maxR) * maxPx);
+
+      document.getElementById("size-target-label").textContent = target.name.toUpperCase();
+      const ratio = (target.radius_km / earth.radius_km).toFixed(2);
+      document.getElementById("size-ratio-label").textContent = `${ratio}x Earth Diameter`;
+
+      sctx.fillStyle = earth.color;
+      sctx.beginPath();
+      sctx.arc(w * 0.32, h / 2, rEarthPx, 0, Math.PI * 2);
+      sctx.fill();
+      sctx.fillStyle = "#93a0b4";
+      sctx.font = "11px ui-monospace, monospace";
+      sctx.fillText("Earth", w * 0.32 + rEarthPx + 8, h / 2 + 4);
+
+      sctx.fillStyle = target.color;
+      sctx.beginPath();
+      sctx.arc(w * 0.68, h / 2, rTargetPx, 0, Math.PI * 2);
+      sctx.fill();
+      sctx.fillStyle = "#ffffff";
+      sctx.fillText(target.name, w * 0.68 + rTargetPx + 8, h / 2 + 4);
+    }
+
+    function renderCadetCalculator() {
+      const ageVal = Math.max(0.5, parseFloat(document.getElementById("cadet-age").value) || 10);
+      const weightVal = Math.max(1, parseFloat(document.getElementById("cadet-weight").value) || 80);
+      const grid = document.getElementById("cadet-calc-grid");
+
+      const picks = planets.filter(p => ["mercury", "venus", "mars", "jupiter", "saturn"].includes(p.id));
+      grid.innerHTML = picks.map(p => {
+        const planetAge = ((ageVal * 365.256) / p.period_days).toFixed(1);
+        const planetWeight = (weightVal * p.gravity_g).toFixed(0);
+        return `
+          <div class="calc-card">
+            <div style="color:${p.color}; font-weight:700;">${p.name}</div>
+            <div>Age: <strong>${planetAge} yrs</strong></div>
+            <div>Weight: <strong>${planetWeight} lbs</strong></div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    document.getElementById("cadet-age").addEventListener("input", renderCadetCalculator);
+    document.getElementById("cadet-weight").addEventListener("input", renderCadetCalculator);
+    document.getElementById("preset-kid").addEventListener("click", () => {
+      document.getElementById("cadet-age").value = 10;
+      document.getElementById("cadet-weight").value = 80;
+      renderCadetCalculator();
+    });
+    document.getElementById("preset-teen").addEventListener("click", () => {
+      document.getElementById("cadet-age").value = 15;
+      document.getElementById("cadet-weight").value = 130;
+      renderCadetCalculator();
+    });
+
+    function renderPlanetInspector() {
+      const p = planets.find(item => item.id === selectedPlanetId) || planets[0];
+      if (!p) return;
+
+      document.getElementById("insp-name").textContent = p.name;
+      document.getElementById("insp-class").textContent = p.class;
+      document.getElementById("insp-fact").textContent = p.fact;
+      document.getElementById("insp-kid-trip").textContent = p.kid_trip;
+      document.getElementById("insp-sun-au").textContent = `${p.sun_au} AU`;
+      document.getElementById("insp-earth-dist").textContent = p.id === "earth" ? "0.000 AU (Origin)" : `${p.earth_au} AU (${p.earth_mkm}M km)`;
+      document.getElementById("insp-light-time").textContent = p.light_time;
+      document.getElementById("insp-vis-win").textContent = p.visibility_window;
+      document.getElementById("insp-transit").textContent = p.transit_est;
+      document.getElementById("insp-speed").textContent = `${p.speed_kms} km/s`;
+
+      jplBtn.style.display = p.id === "earth" ? "none" : "inline-block";
+      jplResult.textContent = p.id === "earth" ? "EARTH REFERENCE FRAME" : "READY (CLICK VERIFY FOR EXACT RANGE)";
+
+      chipsWrap.innerHTML = "";
+      planets.forEach(item => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "p-chip" + (item.id === p.id ? " selected" : "");
+        b.innerHTML = `<span class="p-dot" style="background:${item.color};"></span>${item.name}`;
+        b.onclick = () => {
+          selectedPlanetId = item.id;
+      
+    // Live USGS Earthquake Filter Switcher
+    const eqBtns = document.querySelectorAll("#eq-filter-btns button");
+    const eqGrid = document.getElementById("usgs-eq-grid");
+    const eqTitle = document.getElementById("eq-feed-title");
+
+    eqBtns.forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const mag = btn.dataset.mag;
+        const region = btn.dataset.region;
+        eqBtns.forEach(b => b.classList.toggle("active", b === btn));
+        eqTitle.textContent = `LIVE USGS EARTHQUAKES // ${btn.textContent.toUpperCase()} (LOADING...)`;
+        try {
+          const res = await fetch(`/api/earthquakes?mag=${encodeURIComponent(mag)}&region=${encodeURIComponent(region)}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          eqTitle.textContent = `LIVE USGS EARTHQUAKES // ${btn.textContent.toUpperCase()}`;
+          const list = data.quakes || [];
+          if (!list.length) {
+            eqGrid.innerHTML = `<div class="card"><p style="color:var(--muted);">No earthquakes matched this filter window.</p></div>`;
+            return;
+          }
+          eqGrid.innerHTML = list.map(q => `
+            <div class="swx-item" style="margin-bottom:0; background:var(--panel);">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+                <strong style="color:var(--warn); font-size:0.9rem;">M ${q.mag} &bull; ${q.place}</strong>
+                <span style="color:var(--muted);">${q.time_utc}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.35rem; color:var(--muted);">
+                <span>Depth: <strong style="color:var(--accent);">${q.depth}</strong></span>
+                <a href="${q.url}" target="_blank" rel="noopener noreferrer" class="link-btn">USGS RECORD &nearr;</a>
+              </div>
+            </div>
+          `).join("");
+        } catch (_) {}
+      });
+    });
+
+
+    // All-50-States Night-Sky & Aurora Scorecard
+    document.getElementById("sky-check-btn").addEventListener("click", async function() {
+      const st = document.getElementById("sky-state-select").value;
+      const lat = document.getElementById("sky-custom-lat").value.trim();
+      const lon = document.getElementById("sky-custom-lon").value.trim();
+      this.textContent = "CHECKING NWS...";
+      try {
+        const qs = new URLSearchParams({ state: st, lat: lat, lon: lon });
+        const res = await fetch(`/api/sky-scorecard?${qs.toString()}`);
+        if (res.ok) {
+          const d = await res.json();
+          document.getElementById("sky-office-meta").textContent = `NWS ${d.office} // ${d.label.toUpperCase()}`;
+          document.getElementById("sky-verdict").textContent = d.verdict;
+          document.getElementById("sky-score-val").textContent = `${d.sky_score} / 100`;
+          document.getElementById("sky-forecast-txt").textContent = `${d.short_forecast} (${d.temp})`;
+          document.getElementById("sky-aurora-txt").textContent = d.aurora_status;
+        }
+      } catch (_) {}
+      this.textContent = "UPDATE SKY CHECK";
+    });
+
+    // Radiosonde Balloon Trajectory Simulator
+    function updateBalloonSim() {
+      const lat0 = parseFloat(document.getElementById("bal-lat").value) || 33.1732;
+      const lon0 = parseFloat(document.getElementById("bal-lon").value) || -86.2517;
+      const asc = Math.max(0.5, parseFloat(document.getElementById("bal-asc").value) || 5.0);
+      const burst = Math.max(1000, parseFloat(document.getElementById("bal-burst").value) || 24000);
+      const desc = Math.max(0.5, parseFloat(document.getElementById("bal-desc").value) || 7.5);
+      const windMph = Math.max(0, parseFloat(document.getElementById("bal-wind").value) || 28);
+      const dirDeg = parseFloat(document.getElementById("bal-dir").value) || 75;
+
+      const tAsc = burst / asc;
+      const tDesc = burst / desc;
+      const totalSec = tAsc + tDesc;
+      const windMs = windMph * 0.44704;
+      const driftM = windMs * totalSec;
+      const driftKm = driftM / 1000.0;
+      const driftMi = driftKm * 0.621371;
+
+      const rad = (dirDeg * Math.PI) / 180.0;
+      const dNorthKm = driftKm * Math.cos(rad);
+      const dEastKm = driftKm * Math.sin(rad);
+
+      const lat1 = lat0 + (dNorthKm / 111.32);
+      const lon1 = lon0 + (dEastKm / (111.32 * Math.cos((lat0 * Math.PI) / 180.0)));
+
+      const hrs = Math.floor(totalSec / 3600);
+      const mins = Math.round((totalSec % 3600) / 60);
+      document.getElementById("bal-time").textContent = `${hrs}h ${mins}m`;
+      document.getElementById("bal-dist").textContent = `${driftKm.toFixed(1)} km (${driftMi.toFixed(1)} mi)`;
+      document.getElementById("bal-land").textContent = `${lat1.toFixed(4)}°, ${lon1.toFixed(4)}°`;
+    }
+    ["bal-lat", "bal-lon", "bal-asc", "bal-burst", "bal-desc", "bal-wind", "bal-dir"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updateBalloonSim);
+    });
+    updateBalloonSim();
+
+    // Rocket Staging & Delta-V Calculator
+    const rocketProfiles = {
+      leo: { dv: 9.4, stages: "2 Stages (RP-1 / Methalox)", ratio: 22, cruise: "~9 minutes to orbit", note: "A rocket must reach ~17,500 mph sideways so it continuously falls around Earth!" },
+      moon: { dv: 15.2, stages: "3 Stages (Hydrolox Upper)", ratio: 68, cruise: "~3 days transit", note: "Apollo astronauts took about 3 days to cross the 238,855 miles to the Moon." },
+      mars: { dv: 18.6, stages: "3 Stages + Aerocapture", ratio: 115, cruise: "~7 to 9 months", note: "Most of a rocket's weight at liftoff is fuel just to escape Earth's gravity pull!" },
+      europa: { dv: 26.4, stages: "Heavy + Gravity Assists", ratio: 240, cruise: "~5.5 years", note: "Deep-space probes swing past planets like Venus and Earth for free gravity boosts!" }
+    };
+    function updateRocketSim() {
+      const key = document.getElementById("rkt-target").value;
+      const payload = Math.max(10, parseFloat(document.getElementById("rkt-payload").value) || 1200);
+      const prof = rocketProfiles[key] || rocketProfiles.mars;
+      const liftoffKg = Math.round(payload * prof.ratio);
+      document.getElementById("rkt-dv").textContent = `${prof.dv} km/s`;
+      document.getElementById("rkt-stages").textContent = prof.stages;
+      document.getElementById("rkt-mass").textContent = `${liftoffKg.toLocaleString()} kg`;
+      document.getElementById("rkt-cruise").textContent = prof.cruise;
+      document.getElementById("rkt-kid-note").textContent = prof.note;
+    }
+    document.getElementById("rkt-target").addEventListener("change", updateRocketSim);
+    document.getElementById("rkt-payload").addEventListener("input", updateRocketSim);
+    updateRocketSim();
+
+    // Download PNG Telemetry Patch Exporter
+    document.getElementById("download-patch-btn").addEventListener("click", () => {
+      const c = document.getElementById("telemetry-patch-canvas");
+      const pctx = c.getContext("2d");
+      const target = planets.find(item => item.id === selectedPlanetId) || planets[0];
+
+      pctx.fillStyle = "#080a0e";
+      pctx.fillRect(0, 0, 800, 420);
+      pctx.strokeStyle = "#4ea8de";
+      pctx.lineWidth = 4;
+      pctx.strokeRect(16, 16, 768, 388);
+
+      pctx.fillStyle = "#4ea8de";
+      pctx.font = "bold 16px ui-monospace, monospace";
+      pctx.fillText("VORTEX GHOST AEROSPACE EXPLORATION & RESEARCH", 40, 56);
+
+      pctx.fillStyle = "#eef2f7";
+      pctx.font = "bold 28px sans-serif";
+      pctx.fillText("LIVE DIVISION TELEMETRY DISPATCH", 40, 96);
+
+      pctx.fillStyle = "#93a0b4";
+      pctx.font = "16px ui-monospace, monospace";
+      pctx.fillText(`TIMESTAMP: ${document.getElementById("planet-epoch").textContent}`, 40, 142);
+      pctx.fillText(`PLANET TARGET: ${target.name.toUpperCase()} (${target.earth_au} AU | 1-WAY: ${target.light_time})`, 40, 176);
+      pctx.fillText(`LUNAR PHASE: ${document.getElementById("lunar-phase").textContent} (${document.getElementById("lunar-illum").textContent}% ILLUM)`, 40, 210);
+      pctx.fillText(`ISS POSITION: ${document.getElementById("sat-lat").textContent}, ${document.getElementById("sat-lon").textContent} @ ${document.getElementById("sat-alt").textContent}`, 40, 244);
+      pctx.fillText(`SKY SCORECARD: ${document.getElementById("sky-score-val").textContent} — ${document.getElementById("sky-verdict").textContent}`, 40, 278);
+      pctx.fillText(`COMMAND: GHOST 1 // VORTEXGHOST.SITE`, 40, 356);
+
+      const link = document.createElement("a");
+      link.download = `vortex-ghost-telemetry-${Date.now()}.png`;
+      link.href = c.toDataURL("image/png");
+      link.click();
+    });
+
+    renderPlanetInspector();
+          drawOrbitCanvas();
+          drawSizeCanvas();
+        };
+        chipsWrap.appendChild(b);
+      });
+    }
+
+    jplBtn.addEventListener("click", async () => {
+      if (selectedPlanetId === "earth") return;
+      jplResult.textContent = "QUERYING NASA JPL HORIZONS...";
+      try {
+        const res = await fetch(`/api/jpl-horizons?planet=${encodeURIComponent(selectedPlanetId)}`);
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          jplResult.textContent = data.error || "UNAVAILABLE";
+          return;
+        }
+        jplResult.textContent = `${data.earth_au} AU (${data.earth_mkm}M km) • 1-WAY: ${data.light_time} [${data.epoch_utc}]`;
+      } catch (_) {
+        jplResult.textContent = "CONNECTION ERROR";
+      }
+    });
+
+    function renderPlanetTable() {
+      tableBody.innerHTML = planets.map(p => `
+        <tr data-pid="${p.id}" style="cursor:pointer;">
+          <td><span class="p-dot" style="background:${p.color};"></span><strong>${p.name}</strong></td>
+          <td>${p.sun_au}</td>
+          <td>${p.earth_au}</td>
+          <td>${p.light_time}</td>
+          <td>${p.visibility_window}</td>
+          <td>${p.transit_est}</td>
+          <td>${p.speed_kms} km/s</td>
+        </tr>
+      `).join("");
+
+      tableBody.querySelectorAll("tr").forEach(row => {
+        row.addEventListener("click", () => {
+          const pid = row.dataset.pid;
+          if (pid) {
+            selectedPlanetId = pid;
+            renderPlanetInspector();
+            drawOrbitCanvas();
+            drawSizeCanvas();
+          }
+        });
+      });
+    }
+
+    function drawOrbitCanvas() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const usableRadius = (Math.min(w, h) / 2) - 34;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.strokeStyle = "rgba(147, 160, 180, 0.14)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i <= 4; i++) {
+        const rr = (usableRadius / 4) * i;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "#f6c945";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      const earth = planets.find(item => item.id === "earth");
+      const target = planets.find(item => item.id === selectedPlanetId);
+      if (earth && target && target.id !== "earth") {
+        const ex = cx + (earth.x / maxAuScale) * usableRadius;
+        const ey = cy - (earth.y / maxAuScale) * usableRadius;
+        const tx = cx + (target.x / maxAuScale) * usableRadius;
+        const ty = cy - (target.y / maxAuScale) * usableRadius;
+        if (Math.hypot(target.x, target.y) <= maxAuScale * 1.15) {
+          ctx.save();
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = "rgba(230, 237, 245, 0.35)";
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(tx, ty);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      planets.forEach(p => {
+        const rAu = Math.hypot(p.x, p.y);
+        if (rAu > maxAuScale * 1.15 && maxAuScale === 2.0) return;
+
+        const orbitPx = (p.sun_au / maxAuScale) * usableRadius;
+        if (orbitPx > 4 && orbitPx < usableRadius * 1.25) {
+          ctx.strokeStyle = "rgba(147, 160, 180, 0.18)";
+          ctx.beginPath();
+          ctx.arc(cx, cy, orbitPx, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        const px = cx + (p.x / maxAuScale) * usableRadius;
+        const py = cy - (p.y / maxAuScale) * usableRadius;
+
+        if (px >= -15 && px <= w + 15 && py >= -15 && py <= h + 15) {
+          const isSel = p.id === selectedPlanetId;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(px, py, isSel ? 6.5 : 4.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (isSel) {
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(px, py, 9.5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+          }
+
+          ctx.fillStyle = isSel ? "#ffffff" : "#93a0b4";
+          ctx.font = "11px ui-monospace, monospace";
+          ctx.fillText(p.name, px + 8, py + 3);
+        }
+      });
+    }
+
+    async function refreshPlanets(daysVal = currentDayOffset) {
+      try {
+        const res = await fetch(`/api/planets?days=${encodeURIComponent(daysVal)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data.planets) && data.planets.length) {
+          planets = data.planets;
+          document.getElementById("planet-epoch").textContent = data.timestamp_utc;
+          if (data.lunar) {
+            document.getElementById("lunar-phase").textContent = data.lunar.phase_name;
+            document.getElementById("lunar-illum").textContent = data.lunar.illumination;
+            document.getElementById("lunar-dist").textContent = `${data.lunar.dist_km} km`;
+            document.getElementById("lunar-age").textContent = data.lunar.age_days;
+            document.getElementById("lunar-sky-quality").textContent = data.lunar.sky_quality;
+          }
+          renderPlanetInspector();
+          renderPlanetTable();
+          renderCadetCalculator();
+          drawOrbitCanvas();
+          drawSizeCanvas();
+        }
+      } catch (_) {}
+    }
+
+    scrubber.addEventListener("input", () => {
+      currentDayOffset = parseFloat(scrubber.value) || 0;
+      const sign = currentDayOffset > 0 ? "+" : "";
+      scrubberLabel.textContent = currentDayOffset === 0 ? "+0.0 DAYS (LIVE)" : `${sign}${currentDayOffset.toFixed(1)} DAYS`;
+      refreshPlanets(currentDayOffset);
+    });
+
+    document.getElementById("scrubber-reset").addEventListener("click", () => {
+      scrubber.value = 0;
+      currentDayOffset = 0;
+      scrubberLabel.textContent = "+0.0 DAYS (LIVE)";
+      refreshPlanets(0);
+    });
+
+    document.getElementById("scale-inner").addEventListener("click", function() {
+      maxAuScale = 2.0;
+      this.classList.add("active");
+      document.getElementById("scale-full").classList.remove("active");
+      drawOrbitCanvas();
+    });
+
+    document.getElementById("scale-full").addEventListener("click", function() {
+      maxAuScale = 31.0;
+      this.classList.add("active");
+      document.getElementById("scale-inner").classList.remove("active");
+      drawOrbitCanvas();
+    });
+
+    // Cadet Quiz Engine + Printable Certificate Sync
+    const quizQuestions = [
+      {
+        q: "Which planet is closest to the Sun?",
+        options: ["Mercury", "Mars", "Neptune"],
+        ans: 0,
+        why: "Mercury orbits closest to the Sun at about 0.39 AU."
+      },
+      {
+        q: "What is 1 Astronomical Unit (AU)?",
+        options: ["Distance from Earth to the Sun", "Length of a spacewalk", "Size of a rocket engine"],
+        ans: 0,
+        why: "1 AU is the average distance between Earth and the Sun (~93 million miles)."
+      },
+      {
+        q: "Which planet is famous for its wide system of ice and rock rings?",
+        options: ["Venus", "Saturn", "Mercury"],
+        ans: 1,
+        why: "Saturn has the largest and brightest ring system in our solar system."
+      },
+      {
+        q: "What is an exoplanet?",
+        options: ["A planet orbiting another star", "A moon around Earth", "A space station in low orbit"],
+        ans: 0,
+        why: "Exoplanets are worlds outside our solar system that orbit other stars."
+      }
+    ];
+
+    let qIdx = 0;
+    let qScore = 0;
+    let qAnswered = false;
+    let completedSet = new Set();
+
+    function syncCertificateDisplay() {
+      const nameVal = document.getElementById("cert-name-input").value.trim();
+      document.getElementById("cert-display-name").textContent = nameVal || "Junior Space Explorer";
+      document.getElementById("cert-display-score").textContent = `${qScore} / ${quizQuestions.length}`;
+      if (completedSet.size === quizQuestions.length) {
+        document.getElementById("cert-unlock-status").textContent = `CHALLENGE COMPLETE (${qScore}/${quizQuestions.length}) — READY TO PRINT!`;
+      } else {
+        document.getElementById("cert-unlock-status").textContent = `QUESTIONS ANSWERED: ${completedSet.size} OF ${quizQuestions.length}`;
+      }
+    }
+
+    function renderQuizQuestion() {
+      const item = quizQuestions[qIdx];
+      qAnswered = false;
+      document.getElementById("quiz-progress").textContent = `CADET QUIZ // QUESTION ${qIdx + 1} OF ${quizQuestions.length}`;
+      document.getElementById("quiz-score").textContent = `SCORE: ${qScore} / ${quizQuestions.length}`;
+      document.getElementById("quiz-question").textContent = item.q;
+      document.getElementById("quiz-feedback").textContent = "";
+
+      const optWrap = document.getElementById("quiz-options");
+      optWrap.innerHTML = "";
+      item.options.forEach((optText, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "quiz-option";
+        btn.textContent = optText;
+        btn.onclick = () => {
+          if (qAnswered) return;
+          qAnswered = true;
+          const allBtns = optWrap.querySelectorAll("button");
+          allBtns[item.ans].classList.add("correct");
+          if (idx === item.ans) {
+            if (!completedSet.has(qIdx)) qScore += 1;
+            document.getElementById("quiz-feedback").textContent = `Correct! ${item.why}`;
+          } else {
+            btn.classList.add("wrong");
+            document.getElementById("quiz-feedback").textContent = `Not quite — ${item.why}`;
+          }
+          completedSet.add(qIdx);
+          document.getElementById("quiz-score").textContent = `SCORE: ${qScore} / ${quizQuestions.length}`;
+          syncCertificateDisplay();
+        };
+        optWrap.appendChild(btn);
+      });
+    }
+
+    document.getElementById("quiz-next-btn").addEventListener("click", () => {
+      qIdx = (qIdx + 1) % quizQuestions.length;
+      renderQuizQuestion();
+    });
+
+    document.getElementById("quiz-reset-btn").addEventListener("click", () => {
+      qIdx = 0;
+      qScore = 0;
+      completedSet.clear();
+      syncCertificateDisplay();
+      renderQuizQuestion();
+    });
+
+    document.getElementById("cert-name-input").addEventListener("input", syncCertificateDisplay);
+    document.getElementById("print-cert-btn").addEventListener("click", () => {
+      syncCertificateDisplay();
+      window.print();
+    });
+
+    document.getElementById("copy-briefing-btn").addEventListener("click", async function() {
+      const target = planets.find(item => item.id === selectedPlanetId) || planets[0];
+      const text = `Vortex Ghost Aerospace Briefing (${document.getElementById("planet-epoch").textContent}) — Target: ${target.name} (${target.earth_au} AU from Earth, 1-way signal: ${target.light_time}, ${target.visibility_window}) | Moon: ${document.getElementById("lunar-phase").textContent} (${document.getElementById("lunar-illum").textContent}%) | Missions: {{ total_missions }}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        this.textContent = "COPIED TO CLIPBOARD";
+        setTimeout(() => { this.textContent = "COPY BRIEFING SUMMARY"; }, 1800);
+      } catch (_) {}
+    });
+
+    renderPlanetInspector();
+    renderPlanetTable();
+    renderCadetCalculator();
+    renderQuizQuestion();
+    syncCertificateDisplay();
+    drawOrbitCanvas();
+    drawSizeCanvas();
+    setInterval(() => {
+      if (currentDayOffset === 0) refreshPlanets(0);
+    }, 15000);
+  </script>
+</body>
+</html>
